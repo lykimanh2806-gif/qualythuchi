@@ -18,18 +18,12 @@
       font-size: 1.5rem; /* text-2xl */
       line-height: 1.25;
     }
-
-    /* Style cho modal */
-    .type-btn {
-      transition: all 0.2s ease;
-      border-color: #e5e7eb;
-      color: #6b7280;
+    .modal {
+      animation: modalPop 0.3s ease forwards;
     }
-    .type-btn.active {
-      border-color: #6366f1;
-      background-color: #f0f0ff;
-      color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    @keyframes modalPop {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
@@ -137,79 +131,87 @@
   <i class="fa-solid fa-plus"></i>
 </button>
 
-<!-- ==================== MODAL THÊM GIAO DỊCH ==================== -->
-<div id="addModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] px-4">
-  <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
-    <!-- Header -->
-    <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b">
-      <h2 class="text-2xl font-semibold text-gray-800">Thêm giao dịch mới</h2>
-      <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600 text-3xl leading-none">×</button>
+<!-- POPUP THÊM GIAO DỊCH -->
+<div id="addModal" onclick="if(event.target === this) closeModal()" 
+     class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4">
+  <div onclick="event.stopImmediatePropagation()" 
+       class="modal bg-white rounded-3xl max-w-md w-full shadow-2xl">
+    
+    <div class="flex justify-between items-center px-6 pt-6 pb-4 border-b">
+      <h3 class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+        <i class="fa-solid fa-plus-circle text-indigo-600"></i>
+        Thêm giao dịch mới
+      </h3>
+      <button onclick="closeModal()" 
+              class="w-9 h-9 flex items-center justify-center text-2xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-2xl">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
 
-    <div class="p-6 space-y-6">
-      <!-- Loại giao dịch -->
+    <form id="addForm" onsubmit="handleAddTransaction(event)" class="p-6 space-y-6">
+      
+      <!-- Loại giao dịch (toggle) -->
       <div>
-        <p class="text-sm text-gray-500 mb-2">Loại giao dịch</p>
-        <div class="grid grid-cols-2 gap-3">
-          <button onclick="setTransactionType('income')" 
-                  id="btnIncome"
-                  class="type-btn flex items-center justify-center gap-2 py-4 rounded-2xl border-2 font-medium">
-            <i class="fa-solid fa-arrow-trend-up"></i>
-            <span>Thu nhập</span>
-          </button>
-          <button onclick="setTransactionType('expense')" 
-                  id="btnExpense"
-                  class="type-btn flex items-center justify-center gap-2 py-4 rounded-2xl border-2 font-medium active">
+        <label class="text-xs uppercase tracking-widest text-gray-500 mb-3 block font-medium">Loại giao dịch</label>
+        <div class="flex border border-gray-200 rounded-3xl p-1 bg-gray-50">
+          <!-- Chi tiêu -->
+          <button type="button" id="btnExpense"
+                  onclick="setType('expense')"
+                  class="flex-1 py-4 text-base font-semibold rounded-3xl flex items-center justify-center gap-2 transition-all">
             <i class="fa-solid fa-arrow-trend-down"></i>
             <span>Chi tiêu</span>
+          </button>
+          <!-- Thu nhập -->
+          <button type="button" id="btnIncome"
+                  onclick="setType('income')"
+                  class="flex-1 py-4 text-base font-semibold rounded-3xl flex items-center justify-center gap-2 transition-all">
+            <i class="fa-solid fa-arrow-trend-up"></i>
+            <span>Thu nhập</span>
           </button>
         </div>
       </div>
 
       <!-- Số tiền -->
       <div>
-        <label class="text-sm text-gray-500 block mb-1">Số tiền (₫)</label>
-        <input type="number" id="modalAmount" 
-               class="w-full px-4 py-4 text-2xl font-semibold border border-gray-200 rounded-2xl focus:outline-none focus:border-indigo-500"
-               placeholder="0" min="1000">
+        <label class="text-xs uppercase tracking-widest text-gray-500 mb-3 block font-medium">Số tiền (₫)</label>
+        <div class="relative">
+          <input type="number" id="amount" 
+                 class="w-full text-4xl font-semibold py-5 px-6 bg-gray-50 border border-transparent focus:border-indigo-300 rounded-3xl outline-none text-center"
+                 placeholder="0" min="1000" step="1000" required>
+          <div class="absolute right-8 top-1/2 -translate-y-1/2 text-3xl text-gray-400 font-light">₫</div>
+        </div>
       </div>
 
       <!-- Ngày -->
       <div>
-        <label class="text-sm text-gray-500 block mb-1">Ngày</label>
-        <input type="date" id="modalDate" 
-               class="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:outline-none focus:border-indigo-500">
+        <label class="text-xs uppercase tracking-widest text-gray-500 mb-3 block font-medium">Ngày giao dịch</label>
+        <input type="date" id="date" 
+               class="w-full py-5 px-6 bg-gray-50 border border-transparent focus:border-indigo-300 rounded-3xl outline-none text-lg">
       </div>
 
       <!-- Danh mục -->
       <div>
-        <label class="text-sm text-gray-500 block mb-1">Danh mục</label>
-        <select id="modalCategory" 
-                class="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:outline-none focus:border-indigo-500 text-base">
-          <!-- JS sẽ tự đổ danh mục -->
+        <label class="text-xs uppercase tracking-widest text-gray-500 mb-3 block font-medium">Danh mục</label>
+        <select id="category" required
+                class="w-full py-5 px-6 bg-gray-50 border border-transparent focus:border-indigo-300 rounded-3xl outline-none text-lg">
+          <!-- JS populate -->
         </select>
       </div>
 
       <!-- Ghi chú -->
       <div>
-        <label class="text-sm text-gray-500 block mb-1">Ghi chú</label>
-        <input type="text" id="modalNote" 
-               class="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:outline-none focus:border-indigo-500"
-               placeholder="Ví dụ: Ăn trưa cơm tấm">
+        <label class="text-xs uppercase tracking-widest text-gray-500 mb-3 block font-medium">Ghi chú</label>
+        <input type="text" id="note" placeholder="Ví dụ: Ăn trưa cơm tấm" 
+               class="w-full py-5 px-6 bg-gray-50 border border-transparent focus:border-indigo-300 rounded-3xl outline-none text-lg">
       </div>
-    </div>
 
-    <!-- Footer -->
-    <div class="flex gap-3 px-6 pb-6">
-      <button onclick="closeAddModal()" 
-              class="flex-1 py-4 text-gray-600 font-medium border border-gray-300 rounded-2xl hover:bg-gray-100 transition">
-        Hủy
+      <!-- Nút lưu -->
+      <button type="submit"
+              class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 transition-colors text-white font-semibold text-xl py-6 rounded-3xl flex items-center justify-center gap-3">
+        <i class="fa-solid fa-check"></i>
+        LƯU GIAO DỊCH
       </button>
-      <button onclick="saveTransaction()" 
-              class="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl transition">
-        Lưu giao dịch
-      </button>
-    </div>
+    </form>
   </div>
 </div>
 
@@ -248,6 +250,10 @@ let transactions = [
   {id:30, date:"2026-04-30", type:"expense", amount:680000, category:"Nhà cửa", note:"Internet"}
 ];
 
+// Danh mục theo loại
+const expenseCategories = ["Ăn uống", "Di chuyển", "Mua sắm", "Giải trí", "Nhà cửa", "Sức khỏe", "Giáo dục"];
+const incomeCategories = ["Lương", "Thưởng", "Tiết kiệm"];
+
 const categoryColors = {
   "Ăn uống": "#f59e0b", "Di chuyển": "#3b82f6", "Nhà cửa": "#8b5cf6", "Mua sắm": "#ec4899",
   "Giải trí": "#14b8a6", "Sức khỏe": "#ef4444", "Giáo dục": "#6366f1", "Lương": "#10b981",
@@ -255,22 +261,9 @@ const categoryColors = {
 };
 
 let pieChart, barChart, lineChart;
-
-// ==================== PHẦN MỚI: MODAL + LOCALSTORAGE ====================
 let currentType = "expense";
 
-const incomeCategories = ["Lương", "Thưởng", "Tiết kiệm"];
-const expenseCategories = ["Ăn uống", "Di chuyển", "Nhà cửa", "Mua sắm", "Giải trí", "Sức khỏe", "Giáo dục"];
-
-// Load dữ liệu từ localStorage (nếu có)
-if (localStorage.getItem("transactions")) {
-  transactions = JSON.parse(localStorage.getItem("transactions"));
-}
-
-function saveToLocalStorage() {
-  localStorage.setItem("transactions", JSON.stringify(transactions));
-}
-
+// ==================== HÀM TÍNH TOÁN & HIỂN THỊ ====================
 function calculateSummary(filtered) {
   let totalIncome = 0, totalExpense = 0;
   filtered.forEach(t => t.type === "income" ? totalIncome += t.amount : totalExpense += t.amount);
@@ -368,70 +361,85 @@ function updateAllCharts() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: { y: { ticks: { callback: v => (v/1000000).toFixed(1) + 'tr' }}} 
+      scales: { y: { ticks: { callback: v => (v/1000000).toFixed(1) + 'tr' }}}
     }
   });
 }
 
-function resetFilters() {
-  document.getElementById("filterMonth").value = "";
-  updateAllCharts();
-}
-
-// ==================== CÁC HÀM MODAL ====================
+// ==================== POPUP THÊM GIAO DỊCH ====================
 function openAddModal() {
-  currentType = "expense";
-  document.getElementById("addModal").classList.remove("hidden");
-  document.getElementById("modalDate").value = "2026-04-16";
-  document.getElementById("modalAmount").value = "";
-  document.getElementById("modalNote").value = "";
-  setTransactionType("expense");
+  const modal = document.getElementById("addModal");
+  modal.classList.remove("hidden");
+  
+  // Đặt ngày mặc định là ngày hiện tại trong demo (16/04/2026)
+  const dateInput = document.getElementById("date");
+  dateInput.value = "2026-04-16";
+  
+  // Reset form
+  document.getElementById("amount").value = "";
+  document.getElementById("note").value = "";
+  
+  // Mặc định là chi tiêu
+  setType("expense");
 }
 
-function closeAddModal() {
-  document.getElementById("addModal").classList.add("hidden");
+function closeModal() {
+  const modal = document.getElementById("addModal");
+  modal.classList.add("hidden");
 }
 
-function setTransactionType(type) {
+function setType(type) {
   currentType = type;
   
-  // Cập nhật nút active
-  const btnIncome = document.getElementById("btnIncome");
   const btnExpense = document.getElementById("btnExpense");
+  const btnIncome = document.getElementById("btnIncome");
   
-  btnIncome.classList.toggle("active", type === "income");
-  btnExpense.classList.toggle("active", type === "expense");
+  if (type === "expense") {
+    // Chi tiêu active
+    btnExpense.classList.add("bg-rose-500", "text-white");
+    btnExpense.classList.remove("bg-white", "text-gray-700");
+    // Thu nhập inactive
+    btnIncome.classList.add("bg-white", "text-gray-700");
+    btnIncome.classList.remove("bg-emerald-500", "text-white");
+  } else {
+    // Thu nhập active
+    btnIncome.classList.add("bg-emerald-500", "text-white");
+    btnIncome.classList.remove("bg-white", "text-gray-700");
+    // Chi tiêu inactive
+    btnExpense.classList.add("bg-white", "text-gray-700");
+    btnExpense.classList.remove("bg-rose-500", "text-white");
+  }
+  
+  populateCategories();
+}
 
-  // Đổ danh mục tương ứng
-  const select = document.getElementById("modalCategory");
+function populateCategories() {
+  const select = document.getElementById("category");
   select.innerHTML = "";
-  const cats = type === "income" ? incomeCategories : expenseCategories;
   
-  cats.forEach(cat => {
-    const opt = document.createElement("option");
-    opt.value = cat;
-    opt.textContent = cat;
-    select.appendChild(opt);
+  const categories = currentType === "expense" ? expenseCategories : incomeCategories;
+  
+  categories.forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
   });
 }
 
-function saveTransaction() {
-  const amountStr = document.getElementById("modalAmount").value;
-  const amount = parseInt(amountStr);
-  const date = document.getElementById("modalDate").value;
-  const category = document.getElementById("modalCategory").value;
-  const note = document.getElementById("modalNote").value.trim() || "Giao dịch mới";
-
-  if (!amount || amount < 1000 || !date || !category) {
-    alert("Vui lòng nhập đầy đủ thông tin (số tiền tối thiểu 1.000 ₫)!");
-    return;
-  }
-
-  const newId = transactions.length > 0 
-    ? Math.max(...transactions.map(t => t.id)) + 1 
-    : 1;
-
-  transactions.push({
+function handleAddTransaction(e) {
+  e.preventDefault();
+  
+  const amount = parseInt(document.getElementById("amount").value);
+  const date = document.getElementById("date").value;
+  const category = document.getElementById("category").value;
+  const note = document.getElementById("note").value.trim() || (currentType === "expense" ? "Chi tiêu mới" : "Thu nhập mới");
+  
+  // Tạo ID mới
+  const newId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+  
+  // Thêm giao dịch mới
+  transactions.unshift({
     id: newId,
     date: date,
     type: currentType,
@@ -439,16 +447,36 @@ function saveTransaction() {
     category: category,
     note: note
   });
-
-  saveToLocalStorage();
-  closeAddModal();
-  updateAllCharts();   // Cập nhật lại toàn bộ giao diện
+  
+  // Đóng popup
+  closeModal();
+  
+  // Cập nhật toàn bộ giao diện
+  updateAllCharts();
+  
+  // Thông báo nhỏ
+  const toast = document.createElement("div");
+  toast.style.cssText = "position:fixed; bottom:80px; right:24px; background:#10b981; color:white; padding:12px 24px; border-radius:9999px; box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.2); font-weight:500; display:flex; align-items:center; gap:8px; z-index:99999;";
+  toast.innerHTML = `<i class="fa-solid fa-check-circle"></i> Đã thêm giao dịch thành công!`;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.transition = "all 0.3s ease";
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(20px)";
+    setTimeout(() => toast.remove(), 300);
+  }, 2200);
 }
 
-// Event listeners
+// ==================== KHỞI CHẠY ====================
+function resetFilters() {
+  document.getElementById("filterMonth").value = "";
+  updateAllCharts();
+}
+
 document.getElementById("filterMonth").addEventListener("change", updateAllCharts);
 
-// Khởi chạy ứng dụng
+// Khởi tạo lần đầu
 updateAllCharts();
 </script>
 
